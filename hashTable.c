@@ -29,7 +29,7 @@ void add(struct LinkedList* ll, char *key, int data){
 
 int getDataByKey(struct LinkedList* ll, char *key){
     if (ll->key == NULL){
-        printf("No such key\n");
+//        printf("No such key\n");
         return 0;
     }
     else if (strcmp(ll->key, key) == 0)

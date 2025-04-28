@@ -1,0 +1,13 @@
+START:   1000    ;0
+start:   LDA     ONE     ;1000
+        LDX     N       ;1003
+fact:    STX     M       ;1006
+        MULA    M       ;1009
+        LOOP    fact    ;100c
+        STA     RES     ;100f
+        HLT             ;1012
+ONE:     WORD    1       ;1015
+N:       WORD    5       ;1018
+M:       WORD    0       ;101b
+RES:     RESW    1       ;101e
+        END     start
