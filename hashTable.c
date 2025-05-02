@@ -15,7 +15,7 @@ void initLinkedList(struct LinkedList* ll){
     ll->next = NULL;
 }
 
-void add(struct LinkedList* ll, char *key, int data){
+void add(struct LinkedList* ll, char *key, unsigned long data){
     if (ll->key == NULL){
         ll->key = calloc(10, 1);
         strcpy(ll->key, key);
@@ -27,7 +27,7 @@ void add(struct LinkedList* ll, char *key, int data){
         add(ll->next, key, data);
 }
 
-int getDataByKey(struct LinkedList* ll, char *key){
+unsigned long getDataByKey(struct LinkedList* ll, char *key){
     if (ll->key == NULL){
 //        printf("No such key\n");
         return 0;
@@ -41,7 +41,7 @@ int getDataByKey(struct LinkedList* ll, char *key){
 void printLinkedList(struct LinkedList* ll){
     if (ll->key == NULL)
         return;
-    printf("%s: %d\n", ll->key, ll->data);
+    printf("%s: %lx\n", ll->key, ll->data);
     printLinkedList(ll->next);
 }
 
@@ -76,12 +76,12 @@ int getIndex(int M, const char *key){
     return K % M;
 }
 
-void addKeyValue(struct HashTable* table, char key[], int value){ //x = (x >> k) | (x << (32 - k));
+void addKeyValue(struct HashTable* table, char key[], unsigned long value){ //x = (x >> k) | (x << (32 - k));
     int index = getIndex(table->size, key);
     add(table->values[index], key, value);
 }
 
-int getValueByKey(struct HashTable* table, char *key){
+unsigned long getValueByKey(struct HashTable* table, char *key){
     int index = getIndex(table->size, key);
     return getDataByKey(table->values[index], key);
 }

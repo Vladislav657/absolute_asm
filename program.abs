@@ -1,4 +1,4 @@
-START:   1000    ;0
+        START   1000    ;0
 start:   LDA     ONE     ;1000
         LDX     N       ;1003
 fact:    STX     M       ;1006

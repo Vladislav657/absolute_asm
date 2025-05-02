@@ -3,15 +3,15 @@
 
 struct LinkedList{
     char *key;
-    int data;
+    unsigned long data;
     struct LinkedList* next;
 };
 
 void initLinkedList(struct LinkedList* ll);
 
-void add(struct LinkedList* ll, char *key, int data);
+void add(struct LinkedList* ll, char *key, unsigned long data);
 
-int getDataByKey(struct LinkedList* ll, char *key);
+unsigned long getDataByKey(struct LinkedList* ll, char *key);
 
 void printLinkedList(struct LinkedList* ll);
 
@@ -24,9 +24,9 @@ struct HashTable{
 
 void initHashTable(struct HashTable* table);
 
-void addKeyValue(struct HashTable* table, char key[], int value);
+void addKeyValue(struct HashTable* table, char key[], unsigned long value);
 
-int getValueByKey(struct HashTable* table, char *key);
+unsigned long getValueByKey(struct HashTable* table, char *key);
 
 void printHashTable(struct HashTable* table);
 
