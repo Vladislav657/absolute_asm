@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <Windows.h>
 #include "hashTable.h"
 #include "stringList.h"
 
 #define OPERANDS    "E:\\project\\C_labs_2\\absolute_asm\\operands"
 #define PROGRAM     "E:\\project\\C_labs_2\\absolute_asm\\program.abs"
+#define LISTING     "E:\\project\\C_labs_2\\absolute_asm\\listing"
+#define OBJECT      "E:\\project\\C_labs_2\\absolute_asm\\object"
 
 void splitAsmString(char buffer[], char label[128], char operator[128], char operand[128], char comment[128]) {
     char *ptr = strchr(buffer, '\n');
@@ -100,15 +101,67 @@ unsigned long getAddresses(struct HashTable *marks, struct List *labels, unsigne
     char *current;
     for (int i = 1; i < labels->size; ++i) {
         current = get(labels, i);
-        if (current[0] == '\0')
+        if (current[0] != '\0')
             addKeyValue(marks, current, start);
         start += 3;
     }
     return start;
 }
 
-void getListing(struct List *labels, struct List *operators, struct List *operands, struct List *comments, char* file){
+void getListing(struct HashTable *commands, struct HashTable *addresses, struct List *labels, struct List *operators,
+        struct List *operands, struct List *comments, unsigned long start){
+    FILE* out = fopen(LISTING, "w");
 
+    char *label, *operator, *operand, *comment;
+    for (int i = 1; i < operators->size; ++i) {
+        label = get(labels, i);
+        operator = get(operators, i);
+        operand = get(operands, i);
+        comment = get(comments, i);
+
+        unsigned long address = getValueByKey(addresses, operand);
+        if (address == 0 && strcmp(operator, "resb") != 0 && strcmp(operator, "resw") != 0 &&
+        strcmp(operator, "hlt") != 0)
+            sscanf(operand, "%lu", &address);
+
+        fprintf(out, "%d\t%04lx %02lx %04lx\t\t|%s\t\t%s\t\t%s\t\t;%s\n", i, start,
+                getValueByKey(commands, operator),
+                address, label, operator, operand, comment);
+        start += 3;
+    }
+
+    fclose(out);
+}
+
+void getObject(struct HashTable *commands, struct HashTable *addresses, struct List *operators, struct List *operands,
+        unsigned long start, unsigned long size){
+    FILE *out = fopen(OBJECT, "w");
+    fprintf(out, "0301%02lx%04lxXX\n", size, start);
+    unsigned long current = start;
+
+    int i = 1;
+    while (i < operators->size){
+        if (i + 3 <= operators->size){
+            fprintf(out, "0900%04lx", current);
+            for (int j = 0; j < 3; ++j)
+                fprintf(out, "%02lx%04lx",
+                        getValueByKey(commands, get(operators, i + j)),
+                        getValueByKey(addresses, get(operands, i + j)));
+            fprintf(out, "XX\n");
+
+            current += 9;
+            i += 3;
+        } else {
+            fprintf(out, "%02lx00%04lx", (operators->size - i) * 3lu, current);
+            for (int j = 0; j < operators->size - i; ++j)
+                fprintf(out, "%02lx%04lx",
+                        getValueByKey(commands, get(operators, i + j)),
+                        getValueByKey(addresses, get(operands, i + j)));
+            fprintf(out, "XX\n");
+            i = operators->size;
+        }
+    }
+    fprintf(out, "0202%04lx\n", start + size);
 }
 
 int main(void) {
@@ -135,10 +188,10 @@ int main(void) {
 
     fclose(prg);
 
-//    printList(&labels);
-//    printList(&operators);
-//    printList(&operands);
-//    printList(&comments);
+    printList(&labels);
+    printList(&operators);
+    printList(&operands);
+    printList(&comments);
 
     // get labels addresses:
     struct HashTable marks;
@@ -147,6 +200,12 @@ int main(void) {
     unsigned long start;
     sscanf(get(&operands, 0), "%lx", &start);
     unsigned long size = getAddresses(&marks, &labels, start);
+
+    // get listing:
+    getListing(&commands, &marks, &labels, &operators, &operands, &comments, start);
+
+    // get object:
+    getObject(&commands, &marks, &operators, &operands, start, size);
 
     return 0;
 }
