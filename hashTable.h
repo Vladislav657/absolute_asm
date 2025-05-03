@@ -15,7 +15,7 @@ unsigned long getDataByKey(struct LinkedList* ll, char *key);
 
 void printLinkedList(struct LinkedList* ll);
 
-void destroyList(struct LinkedList* ll);
+void destroyLinkedList(struct LinkedList* ll);
 
 struct HashTable{
     int size;

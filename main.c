@@ -99,13 +99,14 @@ void getOperands(struct HashTable *table, FILE *file){
 
 unsigned long getAddresses(struct HashTable *marks, struct List *labels, unsigned long start){
     char *current;
+    unsigned long size = 0;
     for (int i = 1; i < labels->size; ++i) {
         current = get(labels, i);
         if (current[0] != '\0')
-            addKeyValue(marks, current, start);
-        start += 3;
+            addKeyValue(marks, current, start + size);
+        size += 3;
     }
-    return start;
+    return size;
 }
 
 void getListing(struct HashTable *commands, struct HashTable *addresses, struct List *labels, struct List *operators,
@@ -136,32 +137,51 @@ void getListing(struct HashTable *commands, struct HashTable *addresses, struct 
 void getObject(struct HashTable *commands, struct HashTable *addresses, struct List *operators, struct List *operands,
         unsigned long start, unsigned long size){
     FILE *out = fopen(OBJECT, "w");
-    fprintf(out, "0301%02lx%04lxXX\n", size, start);
-    unsigned long current = start;
+    fprintf(out, ":0301%02lx%04lxXX\n", size, start);
+    unsigned long current = start, address;
+    char *operator, *operand;
 
     int i = 1;
     while (i < operators->size){
         if (i + 3 <= operators->size){
-            fprintf(out, "0900%04lx", current);
-            for (int j = 0; j < 3; ++j)
+            fprintf(out, ":0900%04lx", current);
+            for (int j = 0; j < 3; ++j) {
+                operator = get(operators, i + j);
+                operand = get(operands, i + j);
+                address = getValueByKey(addresses, operand);
+
+                if (address == 0 && strcmp(operator, "resb") != 0 && strcmp(operator, "resw") != 0 &&
+                    strcmp(operator, "hlt") != 0)
+                    sscanf(operand, "%lu", &address);
+
                 fprintf(out, "%02lx%04lx",
-                        getValueByKey(commands, get(operators, i + j)),
-                        getValueByKey(addresses, get(operands, i + j)));
+                        getValueByKey(commands, operator),
+                        address);
+            }
             fprintf(out, "XX\n");
 
             current += 9;
             i += 3;
         } else {
-            fprintf(out, "%02lx00%04lx", (operators->size - i) * 3lu, current);
-            for (int j = 0; j < operators->size - i; ++j)
+            fprintf(out, ":%02lx00%04lx", (operators->size - i) * 3lu, current);
+            for (int j = 0; j < operators->size - i; ++j) {
+                operator = get(operators, i + j);
+                operand = get(operands, i + j);
+                address = getValueByKey(addresses, operand);
+
+                if (address == 0 && strcmp(operator, "resb") != 0 && strcmp(operator, "resw") != 0 &&
+                    strcmp(operator, "hlt") != 0)
+                    sscanf(operand, "%lu", &address);
+
                 fprintf(out, "%02lx%04lx",
-                        getValueByKey(commands, get(operators, i + j)),
-                        getValueByKey(addresses, get(operands, i + j)));
+                        getValueByKey(commands, operator),
+                        address);
+            }
             fprintf(out, "XX\n");
             i = operators->size;
         }
     }
-    fprintf(out, "0202%04lx\n", start + size);
+    fprintf(out, ":0202%04lx\n", start + size);
 }
 
 int main(void) {
@@ -173,7 +193,7 @@ int main(void) {
     getOperands(&commands, ops);
     fclose(ops);
 
-    printHashTable(&commands);
+//    printHashTable(&commands);
 
     // get source code:
     FILE *prg = fopen(PROGRAM, "r");
@@ -188,10 +208,10 @@ int main(void) {
 
     fclose(prg);
 
-    printList(&labels);
-    printList(&operators);
-    printList(&operands);
-    printList(&comments);
+//    printList(&labels);
+//    printList(&operators);
+//    printList(&operands);
+//    printList(&comments);
 
     // get labels addresses:
     struct HashTable marks;
@@ -206,6 +226,15 @@ int main(void) {
 
     // get object:
     getObject(&commands, &marks, &operators, &operands, start, size);
+
+    // free memory:
+    destroyList(&labels);
+    destroyList(&operators);
+    destroyList(&operands);
+    destroyList(&comments);
+
+    destroyTable(&marks);
+    destroyTable(&commands);
 
     return 0;
 }

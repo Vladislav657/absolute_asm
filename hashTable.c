@@ -45,11 +45,10 @@ void printLinkedList(struct LinkedList* ll){
     printLinkedList(ll->next);
 }
 
-void destroyList(struct LinkedList* ll){
+void destroyLinkedList(struct LinkedList* ll){
     if (ll->next != NULL)
-        destroyList(ll->next);
+        destroyLinkedList(ll->next);
     free(ll->key);
-    free(ll);
 }
 
 //struct HashTable{
@@ -93,6 +92,6 @@ void printHashTable(struct HashTable* table){
 
 void destroyTable(struct HashTable* table){
     for (int i = 0; i < table->size; ++i)
-        destroyList(table->values[i]);
+        destroyLinkedList(table->values[i]);
     free(table->values);
 }

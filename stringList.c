@@ -38,3 +38,9 @@ void printList(struct List* list){
         printf("'%s' ", list->array[i]);
     printf("\n");
 }
+
+void destroyList(struct List* list){
+    for (int i = 0; i < list->capacity; ++i)
+        free(list->array[i]);
+    free(list->array);
+}

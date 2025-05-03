@@ -15,4 +15,6 @@ char *get(struct List* list, int index);
 
 void printList(struct List* list);
 
+void destroyList(struct List* list);
+
 #endif //ABSOLUTE_ASM_STRINGLIST_H
